@@ -1,0 +1,1253 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "VETRA API - Platform Kesehatan Hewan Peliharaan",
+    "description": "Dokumentasi Lengkap API untuk VETRA - Platform Booking Klinik, Konsultasi Dokter, Chatting, dan AI Chatbot",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Vetra API Support",
+      "email": "support@vetra.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8000/api",
+      "description": "Development Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "Register, login, logout, refresh token, dan me info"
+    },
+    {
+      "name": "Public Content",
+      "description": "Endpoint publik untuk browsing klinik, dokter, artikel, dan mengirim pesan kontak"
+    },
+    {
+      "name": "User Profile",
+      "description": "Endpoint autentikasi JWT untuk manajemen profil dan foto"
+    },
+    {
+      "name": "Pets",
+      "description": "Manajemen data hewan peliharaan (Kucing, Anjing, dll.)"
+    },
+    {
+      "name": "Bookings",
+      "description": "Pemesanan jadwal konsultasi klinik hewan"
+    },
+    {
+      "name": "Reviews",
+      "description": "Pengiriman review pelayanan klinik dan dokter"
+    },
+    {
+      "name": "Chat & Consultation",
+      "description": "Sistem konsultasi chat real-time dengan dokter hewan"
+    },
+    {
+      "name": "AI Chatbot",
+      "description": "Layanan tanya jawab kesehatan hewan otomatis berbasis Gemini AI"
+    },
+    {
+      "name": "API Key Management",
+      "description": "Mengelola token integrasi API Key kustom"
+    },
+    {
+      "name": "Doctor Panel",
+      "description": "Fitur khusus untuk role dokter (Dashboard, status booking, profil medis)"
+    },
+    {
+      "name": "Clinic Panel",
+      "description": "Fitur khusus untuk role klinik (Dashboard, monitoring booking, CRUD dokter klinik)"
+    },
+    {
+      "name": "Admin Panel",
+      "description": "Fitur khusus untuk role admin (Stats global, CRUD user, kelola pesan masuk & reply email, CRUD artikel)"
+    },
+    {
+      "name": "API Key Integration (v2)",
+      "description": "Endpoint alternatif v2 yang diamankan menggunakan X-API-Key header"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Register user baru",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password", "password_confirmation", "role"],
+                "properties": {
+                  "name": { "type": "string", "example": "John Doe" },
+                  "email": { "type": "string", "format": "email", "example": "john@example.com" },
+                  "password": { "type": "string", "format": "password", "example": "password123" },
+                  "password_confirmation": { "type": "string", "format": "password", "example": "password123" },
+                  "phone": { "type": "string", "example": "081234567890" },
+                  "role": { "type": "string", "enum": ["user", "doctor", "clinic", "admin"], "example": "user" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registrasi berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "422": { "description": "Validasi input gagal" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login pengguna",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "example": "user@vetra.id" },
+                  "password": { "type": "string", "format": "password", "example": "user123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login berhasil, mengembalikan token JWT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "401": { "description": "Kredensial tidak valid" }
+        }
+      }
+    },
+    "/auth/google": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Login dengan Google OAuth",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token"],
+                "properties": {
+                  "token": { "type": "string", "example": "google_oauth_token_here" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login OAuth Berhasil" }
+        }
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Minta reset password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "user@vetra.id" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Email reset dikirim" }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Refresh token JWT",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Token berhasil diperbarui" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Logout dari sistem",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Logout berhasil" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Dapatkan info pengguna aktif",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Profil detail pengguna saat ini",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/doctors": {
+      "get": {
+        "tags": ["Public Content"],
+        "summary": "Mendapatkan daftar dokter",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List data dokter" }
+        }
+      }
+    },
+    "/doctors/{id}": {
+      "get": {
+        "tags": ["Public Content"],
+        "summary": "Mendapatkan detail dokter",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Detail profile dokter" },
+          "404": { "description": "Dokter tidak ditemukan" }
+        }
+      }
+    },
+    "/doctors/{id}/reviews": {
+      "get": {
+        "tags": ["Public Content"],
+        "summary": "Mendapatkan review dokter",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Daftar ulasan dokter" }
+        }
+      }
+    },
+    "/clinics": {
+      "get": {
+        "tags": ["Public Content"],
+        "summary": "Mendapatkan daftar klinik",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } }
+        ],
+        "responses": {
+          "200": { "description": "List data klinik" }
+        }
+      }
+    },
+    "/clinics/{id}": {
+      "get": {
+        "tags": ["Public Content"],
+        "summary": "Mendapatkan detail klinik",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Detail profile klinik" }
+        }
+      }
+    },
+    "/clinics/{id}/reviews": {
+      "get": {
+        "tags": ["Public Content"],
+        "summary": "Mendapatkan review klinik",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Daftar ulasan klinik" }
+        }
+      }
+    },
+    "/clinics/{id}/doctors": {
+      "get": {
+        "tags": ["Public Content"],
+        "summary": "Mendapatkan daftar dokter dalam klinik tersebut",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Daftar dokter di klinik" }
+        }
+      }
+    },
+    "/articles": {
+      "get": {
+        "tags": ["Public Content"],
+        "summary": "Mendapatkan daftar artikel",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Daftar artikel kesehatan hewan" }
+        }
+      }
+    },
+    "/articles/{id}": {
+      "get": {
+        "tags": ["Public Content"],
+        "summary": "Mendapatkan detail artikel",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Detail artikel kesehatan" }
+        }
+      }
+    },
+    "/contact": {
+      "post": {
+        "tags": ["Public Content"],
+        "summary": "Mengirim formulir contact message",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "subject", "message"],
+                "properties": {
+                  "name": { "type": "string", "example": "Jane" },
+                  "email": { "type": "string", "format": "email", "example": "jane@example.com" },
+                  "phone": { "type": "string", "example": "081234567" },
+                  "subject": { "type": "string", "example": "Tanya Layanan" },
+                  "message": { "type": "string", "example": "Apakah bisa datang ke rumah?" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Pesan kontak berhasil dikirim" }
+        }
+      }
+    },
+    "/user/profile": {
+      "get": {
+        "tags": ["User Profile"],
+        "summary": "Mengambil detail profil pengguna",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Berhasil mengambil profil" }
+        }
+      },
+      "put": {
+        "tags": ["User Profile"],
+        "summary": "Memperbarui profil pengguna",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string", "example": "User Updated" },
+                  "phone": { "type": "string", "example": "081234567890" },
+                  "address": { "type": "string", "example": "Jl. Kamboja No. 9" },
+                  "password": { "type": "string", "format": "password" },
+                  "password_confirmation": { "type": "string", "format": "password" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Profil berhasil diperbarui" }
+        }
+      }
+    },
+    "/user/profile/picture": {
+      "post": {
+        "tags": ["User Profile"],
+        "summary": "Upload foto profil",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["profile_pic"],
+                "properties": {
+                  "profile_pic": { "type": "string", "format": "binary", "description": "Berkas gambar (.jpg, .png, max 2MB)" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Foto profil berhasil diupload" }
+        }
+      },
+      "delete": {
+        "tags": ["User Profile"],
+        "summary": "Hapus foto profil",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Foto profil berhasil dihapus" }
+        }
+      }
+    },
+    "/user/pets": {
+      "get": {
+        "tags": ["Pets"],
+        "summary": "Get list hewan peliharaan user",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Daftar hewan peliharaan" }
+        }
+      },
+      "post": {
+        "tags": ["Pets"],
+        "summary": "Tambah hewan peliharaan baru",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "species"],
+                "properties": {
+                  "name": { "type": "string", "example": "Milo" },
+                  "species": { "type": "string", "example": "cat" },
+                  "breed": { "type": "string", "example": "Anggora" },
+                  "age": { "type": "integer", "example": 2 },
+                  "weight": { "type": "number", "example": 3.4 },
+                  "gender": { "type": "string", "enum": ["male", "female"], "example": "male" },
+                  "color": { "type": "string", "example": "Orange" },
+                  "medical_history": { "type": "string", "example": "Vaksin Tahunan" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Hewan berhasil ditambahkan" }
+        }
+      }
+    },
+    "/user/pets/{id}": {
+      "put": {
+        "tags": ["Pets"],
+        "summary": "Update data hewan",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "age": { "type": "integer" },
+                  "weight": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Data hewan berhasil diupdate" }
+        }
+      },
+      "delete": {
+        "tags": ["Pets"],
+        "summary": "Hapus data hewan",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Hewan berhasil dihapus" }
+        }
+      }
+    },
+    "/user/notifications": {
+      "get": {
+        "tags": ["User Profile"],
+        "summary": "Mengambil notifikasi user",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Daftar notifikasi" }
+        }
+      }
+    },
+    "/user/notifications/read": {
+      "patch": {
+        "tags": ["User Profile"],
+        "summary": "Tandai semua notifikasi terbaca",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Notifikasi ditandai terbaca" }
+        }
+      }
+    },
+    "/bookings": {
+      "get": {
+        "tags": ["Bookings"],
+        "summary": "Mendapatkan daftar booking konsultasi user",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "status", "in": "query", "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "Daftar booking" }
+        }
+      },
+      "post": {
+        "tags": ["Bookings"],
+        "summary": "Membuat booking baru",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["clinic_id", "scheduled_at"],
+                "properties": {
+                  "clinic_id": { "type": "integer", "example": 1 },
+                  "doctor_id": { "type": "integer", "example": 2 },
+                  "pet_id": { "type": "integer", "example": 1 },
+                  "scheduled_at": { "type": "string", "example": "2026-06-15 10:00:00" },
+                  "notes": { "type": "string", "example": "Kucing lemas" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Booking berhasil dibuat" }
+        }
+      }
+    },
+    "/bookings/{id}": {
+      "get": {
+        "tags": ["Bookings"],
+        "summary": "Detail booking tertentu",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Detail booking" }
+        }
+      },
+      "delete": {
+        "tags": ["Bookings"],
+        "summary": "Batalkan booking",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Booking berhasil dibatalkan" }
+        }
+      }
+    },
+    "/reviews": {
+      "post": {
+        "tags": ["Reviews"],
+        "summary": "Mengirim ulasan review baru",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["reviewable_type", "reviewable_id", "rating"],
+                "properties": {
+                  "reviewable_type": { "type": "string", "enum": ["doctor", "clinic"], "example": "doctor" },
+                  "reviewable_id": { "type": "integer", "example": 2 },
+                  "rating": { "type": "integer", "minimum": 1, "maximum": 5, "example": 5 },
+                  "comment": { "type": "string", "example": "Sangat membantu!" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Review berhasil ditambahkan" }
+        }
+      }
+    },
+    "/chats": {
+      "get": {
+        "tags": ["Chat & Consultation"],
+        "summary": "Mengambil list chat aktif",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Daftar ruang chat" }
+        }
+      }
+    },
+    "/chats/{doctorId}": {
+      "post": {
+        "tags": ["Chat & Consultation"],
+        "summary": "Memulai atau membuka chat room dengan dokter",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "doctorId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Detail chat room" }
+        }
+      }
+    },
+    "/chats/{chatId}/messages": {
+      "get": {
+        "tags": ["Chat & Consultation"],
+        "summary": "Mengambil pesan dari chat room",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "chatId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Daftar pesan" }
+        }
+      },
+      "post": {
+        "tags": ["Chat & Consultation"],
+        "summary": "Mengirim pesan chat",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "chatId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["message"],
+                "properties": {
+                  "message": { "type": "string", "example": "Halo Dokter..." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Pesan terkirim" }
+        }
+      }
+    },
+    "/chats/{chatId}/read": {
+      "patch": {
+        "tags": ["Chat & Consultation"],
+        "summary": "Tandai chat telah dibaca",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "chatId", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Chat ditandai terbaca" }
+        }
+      }
+    },
+    "/chatbot/ask": {
+      "post": {
+        "tags": ["AI Chatbot"],
+        "summary": "Bertanya ke AI Chatbot",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["message"],
+                "properties": {
+                  "message": { "type": "string", "example": "Kucing lemas tidak mau makan" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Respon AI dari Gemini" }
+        }
+      }
+    },
+    "/keys": {
+      "get": {
+        "tags": ["API Key Management"],
+        "summary": "Mendapatkan daftar API Keys aktif",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "List API Keys" }
+        }
+      },
+      "post": {
+        "tags": ["API Key Management"],
+        "summary": "Generate API Key baru",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": { "type": "string", "example": "Mobile App Client" },
+                  "expires_in_days": { "type": "integer", "example": 365 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "API Key berhasil digenerate" }
+        }
+      }
+    },
+    "/keys/{id}": {
+      "delete": {
+        "tags": ["API Key Management"],
+        "summary": "Cabut (Revoke) API Key",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "API Key dinonaktifkan" }
+        }
+      }
+    },
+    "/doctor/dashboard": {
+      "get": {
+        "tags": ["Doctor Panel"],
+        "summary": "Dashboard statistik dokter",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Statistik & recent bookings" }
+        }
+      }
+    },
+    "/doctor/bookings": {
+      "get": {
+        "tags": ["Doctor Panel"],
+        "summary": "Daftar booking pasien dokter",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Daftar booking khusus dokter" }
+        }
+      }
+    },
+    "/doctor/bookings/{id}/status": {
+      "patch": {
+        "tags": ["Doctor Panel"],
+        "summary": "Dokter memperbarui status booking",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": { "type": "string", "enum": ["confirmed", "rejected", "done"], "example": "confirmed" },
+                  "notes": { "type": "string", "example": "Silakan datang ke Klinik Jam 10" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Status booking diubah" }
+        }
+      }
+    },
+    "/doctor/profile": {
+      "patch": {
+        "tags": ["Doctor Panel"],
+        "summary": "Memperbarui info profil medis dokter",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "spesialis": { "type": "string", "example": "Spesialis Bedah Kucing" },
+                  "experience_years": { "type": "integer", "example": 8 },
+                  "bio": { "type": "string", "example": "Berpengalaman di penanganan gawat darurat" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Profil medis terupdate" }
+        }
+      }
+    },
+    "/doctor/online-status": {
+      "patch": {
+        "tags": ["Doctor Panel"],
+        "summary": "Mengubah status online dokter",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Status online beralih" }
+        }
+      }
+    },
+    "/clinic/dashboard": {
+      "get": {
+        "tags": ["Clinic Panel"],
+        "summary": "Dashboard statistik klinik",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Statistik global klinik" }
+        }
+      }
+    },
+    "/clinic/bookings": {
+      "get": {
+        "tags": ["Clinic Panel"],
+        "summary": "Mengambil data booking klinik",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "List data booking klinik" }
+        }
+      }
+    },
+    "/clinic/doctors": {
+      "get": {
+        "tags": ["Clinic Panel"],
+        "summary": "Mengambil dokter klinik tersebut",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "List dokter klinik" }
+        }
+      },
+      "post": {
+        "tags": ["Clinic Panel"],
+        "summary": "Menambahkan dokter ke klinik",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password"],
+                "properties": {
+                  "name": { "type": "string", "example": "Dr. Sarah" },
+                  "email": { "type": "string", "format": "email", "example": "sarah@vetra.id" },
+                  "password": { "type": "string", "example": "password123" },
+                  "phone": { "type": "string", "example": "08123445" },
+                  "spesialis": { "type": "string", "example": "Dokter Umum" },
+                  "experience_years": { "type": "integer", "example": 3 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Dokter berhasil ditambahkan" }
+        }
+      }
+    },
+    "/clinic/doctors/{id}": {
+      "put": {
+        "tags": ["Clinic Panel"],
+        "summary": "Update data dokter oleh klinik",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "spesialis": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Data dokter diperbarui" }
+        }
+      },
+      "delete": {
+        "tags": ["Clinic Panel"],
+        "summary": "Hapus dokter dari klinik",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Dokter terhapus" }
+        }
+      }
+    },
+    "/admin/stats": {
+      "get": {
+        "tags": ["Admin Panel"],
+        "summary": "Statistik global sistem",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Statistik total sistem" }
+        }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "tags": ["Admin Panel"],
+        "summary": "List seluruh user terdaftar",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          { "name": "role", "in": "query", "schema": { "type": "string" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List data users" }
+        }
+      },
+      "post": {
+        "tags": ["Admin Panel"],
+        "summary": "Membuat user baru via Admin",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "email", "password", "role"],
+                "properties": {
+                  "name": { "type": "string", "example": "New User Admin" },
+                  "email": { "type": "string", "format": "email", "example": "newadmin@vetra.id" },
+                  "password": { "type": "string", "example": "password123" },
+                  "role": { "type": "string", "enum": ["user", "doctor", "clinic", "admin"], "example": "user" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User berhasil dibuat" }
+        }
+      }
+    },
+    "/admin/users/{id}": {
+      "put": {
+        "tags": ["Admin Panel"],
+        "summary": "Update data user via Admin",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "is_active": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "User berhasil diperbarui" }
+        }
+      },
+      "delete": {
+        "tags": ["Admin Panel"],
+        "summary": "Hapus user via Admin",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "User terhapus" }
+        }
+      }
+    },
+    "/admin/messages": {
+      "get": {
+        "tags": ["Admin Panel"],
+        "summary": "List pesan bantuan (inbox)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["unread", "read", "replied"] } }
+        ],
+        "responses": {
+          "200": { "description": "List inbox" }
+        }
+      }
+    },
+    "/admin/messages/stats": {
+      "get": {
+        "tags": ["Admin Panel"],
+        "summary": "Statistik status pesan masuk",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "Statistik inbox" }
+        }
+      }
+    },
+    "/admin/messages/{id}": {
+      "get": {
+        "tags": ["Admin Panel"],
+        "summary": "Detail pesan masuk (tanda terbaca)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Detail pesan" }
+        }
+      },
+      "delete": {
+        "tags": ["Admin Panel"],
+        "summary": "Hapus pesan masuk",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Pesan dihapus" }
+        }
+      }
+    },
+    "/admin/messages/{id}/reply": {
+      "post": {
+        "tags": ["Admin Panel"],
+        "summary": "Balas pesan (Kirim email SMTP)",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["reply"],
+                "properties": {
+                  "reply": { "type": "string", "example": "Terima kasih, silakan hubungi kontak kami." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Balasan berhasil dikirim melalui Gmail" }
+        }
+      }
+    },
+    "/admin/articles": {
+      "get": {
+        "tags": ["Admin Panel"],
+        "summary": "List artikel admin",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": { "description": "List artikel" }
+        }
+      },
+      "post": {
+        "tags": ["Admin Panel"],
+        "summary": "Membuat artikel baru",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "slug", "content"],
+                "properties": {
+                  "title": { "type": "string", "example": "Cara Merawat Anak Kucing" },
+                  "slug": { "type": "string", "example": "cara-merawat-anak-kucing" },
+                  "excerpt": { "type": "string", "example": "Langkah awal merawat anak kucing" },
+                  "content": { "type": "string", "example": "Lorem ipsum..." },
+                  "status": { "type": "string", "enum": ["published", "draft"], "example": "published" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Artikel berhasil dibuat" }
+        }
+      }
+    },
+    "/admin/articles/{id}": {
+      "put": {
+        "tags": ["Admin Panel"],
+        "summary": "Update artikel oleh admin",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "status": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Artikel diperbarui" }
+        }
+      },
+      "delete": {
+        "tags": ["Admin Panel"],
+        "summary": "Hapus artikel oleh admin",
+        "security": [{"bearerAuth": []}],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }],
+        "responses": {
+          "200": { "description": "Artikel terhapus" }
+        }
+      }
+    },
+    "/v2/doctors": {
+      "get": {
+        "tags": ["API Key Integration (v2)"],
+        "summary": "List dokter (API Key)",
+        "security": [{"apiKeyAuth": []}],
+        "responses": {
+          "200": { "description": "List data dokter" }
+        }
+      }
+    },
+    "/v2/clinics": {
+      "get": {
+        "tags": ["API Key Integration (v2)"],
+        "summary": "List klinik (API Key)",
+        "security": [{"apiKeyAuth": []}],
+        "responses": {
+          "200": { "description": "List data klinik" }
+        }
+      }
+    },
+    "/v2/articles": {
+      "get": {
+        "tags": ["API Key Integration (v2)"],
+        "summary": "List artikel (API Key)",
+        "security": [{"apiKeyAuth": []}],
+        "responses": {
+          "200": { "description": "List data artikel" }
+        }
+      }
+    },
+    "/v2/bookings": {
+      "post": {
+        "tags": ["API Key Integration (v2)"],
+        "summary": "Membuat booking (API Key)",
+        "security": [{"apiKeyAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id", "clinic_id", "scheduled_at"],
+                "properties": {
+                  "user_id": { "type": "integer", "example": 1 },
+                  "clinic_id": { "type": "integer", "example": 1 },
+                  "doctor_id": { "type": "integer", "example": 2 },
+                  "pet_id": { "type": "integer", "example": 1 },
+                  "scheduled_at": { "type": "string", "example": "2026-06-15 10:00:00" },
+                  "notes": { "type": "string", "example": "Booking via integrasi API Key" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Booking sukses dibuat" }
+        }
+      }
+    },
+    "/v2/chatbot/ask": {
+      "post": {
+        "tags": ["API Key Integration (v2)"],
+        "summary": "Tanya AI Chatbot (API Key)",
+        "security": [{"apiKeyAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["message"],
+                "properties": {
+                  "message": { "type": "string", "example": "Pertanyaan terintegrasi" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Respon AI sukses" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Autentikasi standar JWT. Masukkan token Anda (Tanpa menulis 'Bearer ')"
+      },
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Autentikasi integrasi API Key statis. Kirimkan token API Key Anda pada header X-API-Key"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "role": { "type": "string" },
+          "phone": { "type": "string" },
+          "is_active": { "type": "boolean" }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": { "type": "string" },
+          "token_type": { "type": "string", "example": "bearer" },
+          "expires_in": { "type": "integer", "example": 3600 },
+          "user": { "$ref": "#/components/schemas/User" }
+        }
+      }
+    }
+  }
+}

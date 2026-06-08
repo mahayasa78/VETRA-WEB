@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vetra API - Documentation Home</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 50px;
+        }
+        h1 {
+            color: #0d9488;
+            font-size: 42px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .subtitle {
+            color: #64748b;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        .status {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 12px 20px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+        .status::before {
+            content: '✓';
+            background: #10b981;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn {
+            display: inline-block;
+            padding: 18px 40px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            transition: all 0.3s;
+            margin: 10px 10px 10px 0;
+        }
+        .btn-primary {
+            background: #0d9488;
+            color: white;
+            box-shadow: 0 4px 14px rgba(13, 148, 136, 0.4);
+        }
+        .btn-primary:hover {
+            background: #0f766e;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(13, 148, 136, 0.6);
+        }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        .info-box {
+            background: #f8fafc;
+            border-left: 4px solid #0d9488;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+        .info-box h3 {
+            color: #0f766e;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .info-box ul {
+            list-style: none;
+            padding: 0;
+        }
+        .info-box li {
+            padding: 8px 0;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .info-box li::before {
+            content: '→';
+            color: #0d9488;
+            font-weight: bold;
+        }
+        .accounts {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .account-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .account-card h4 {
+            color: #0d9488;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        .account-card code {
+            background: #f1f5f9;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: block;
+            margin: 4px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐾 Vetra API</h1>
+        <div class="subtitle">Interactive API Documentation</div>
+        
+        <div class="status">
+            Server Running on http://127.0.0.1:8000
+        </div>
+
+        <a href="/api-docs.html" class="btn btn-primary">
+            📘 Open Swagger UI
+        </a>
+        
+        <a href="/swagger.json" class="btn btn-secondary">
+            📄 View JSON Spec
+        </a>
+
+        <div class="info-box">
+            <h3>📝 What's Included:</h3>
+            <ul>
+                <li>Authentication (JWT Bearer Token)</li>
+                <li>Public Endpoints (Clinics, Doctors, Articles)</li>
+                <li>User Endpoints (Profile, Pets, Bookings)</li>
+                <li>Protected Resources with Role-based Access</li>
+                <li>Interactive "Try it out" Feature</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h3>🔐 Test Accounts:</h3>
+            <div class="accounts">
+                <div class="account-card">
+                    <h4>👤 User</h4>
+                    <code>user@vetra.id</code>
+                    <code>user123</code>
+                </div>
+                <div class="account-card">
+                    <h4>👨‍⚕️ Doctor</h4>
+                    <code>dokter@vetra.id</code>
+                    <code>dokter123</code>
+                </div>
+                <div class="account-card">
+                    <h4>🏥 Clinic</h4>
+                    <code>klinik@vetra.id</code>
+                    <code>klinik123</code>
+                </div>
+                <div class="account-card">
+                    <h4>👨‍💼 Admin</h4>
+                    <code>admin@vetra.id</code>
+                    <code>admin123</code>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h3>🚀 Quick Start:</h3>
+            <ul>
+                <li>Click "Open Swagger UI" button above</li>
+                <li>Try POST /auth/login to get token</li>
+                <li>Click "Authorize" and paste token</li>
+                <li>Test protected endpoints</li>
+                <li>Take screenshots for UAS report</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 30px; border-top: 2px solid #e2e8f0; color: #94a3b8; text-align: center;">
+            <p>© 2026 Vetra - Platform Booking Klinik Hewan</p>
+        </div>
+    </div>
+</body>
+</html>
