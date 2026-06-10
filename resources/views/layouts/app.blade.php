@@ -547,6 +547,63 @@
     });
     
     // Logout function
+    // ── Global auth-aware fetch ──────────────────────────────────────────────
+    // Wraps fetch() so that a 401 (token expired) is handled transparently:
+    //   1. Try to refresh the token via POST /api/auth/refresh
+    //   2. If refresh succeeds → update localStorage & retry original request
+    //   3. If refresh fails   → clear session & redirect to /login
+    let _refreshing = null; // deduplicate concurrent refresh calls
+
+    async function authFetch(url, options = {}) {
+        let token = localStorage.getItem('vetra_token');
+
+        // Merge auth header
+        const buildOpts = (t) => ({
+            ...options,
+            headers: {
+                'Accept': 'application/json',
+                ...(options.headers || {}),
+                'Authorization': 'Bearer ' + t,
+            },
+        });
+
+        let res = await fetch(url, buildOpts(token));
+
+        if (res.status !== 401) return res;
+
+        // ── 401: attempt token refresh ──────────────────────────────────────
+        if (!_refreshing) {
+            _refreshing = fetch('/api/auth/refresh', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': 'Bearer ' + token,
+                },
+            }).then(async (r) => {
+                if (r.ok) {
+                    const data = await r.json();
+                    const newToken = data.access_token || data.token;
+                    if (newToken) {
+                        localStorage.setItem('vetra_token', newToken);
+                        return newToken;
+                    }
+                }
+                // Refresh failed – force logout
+                localStorage.removeItem('vetra_token');
+                localStorage.removeItem('vetra_user');
+                window.location.href = '/login';
+                return null;
+            }).finally(() => { _refreshing = null; });
+        }
+
+        const newToken = await _refreshing;
+        if (!newToken) return new Response(null, { status: 401 });
+
+        // Retry original request with new token
+        return fetch(url, buildOpts(newToken));
+    }
+    // ── End authFetch ────────────────────────────────────────────────────────
+
     function logout() {
         if (confirm('Yakin ingin keluar?')) {
             const token = localStorage.getItem('vetra_token');
