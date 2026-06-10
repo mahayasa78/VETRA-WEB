@@ -48,7 +48,17 @@
         background: #fff; border-radius: 16px; border: 1px solid var(--gray-200);
     }
     .state-box i  { font-size: 64px; margin-bottom: 16px; display: block; }
-    .state-box p  { font-size: 16px; color: var(--gray-500); margin-bottom: 24px; }
+    .state-box p  { font-size: 16px; color: var(--gray-500); margin-bottom: 12px; }
+    .retry-btn {
+        display: inline-flex; align-items: center; gap: 6px;
+        margin-top: 4px; padding: 10px 20px; background: var(--teal); color: #fff;
+        border-radius: 10px; border: none; cursor: pointer; font-weight: 600; font-size: 14px; font-family: inherit;
+    }
+
+    /* Alert bar */
+    .alert-bar { padding: 14px 18px; border-radius: 12px; margin-bottom: 20px; display: none; align-items: center; gap: 10px; }
+    .alert-bar.success { background: #f0fdf4; border: 1px solid #86efac; color: #16a34a; display: flex; }
+    .alert-bar.error   { background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; display: flex; }
 
     /* Modal */
     .modal-overlay {
@@ -78,24 +88,10 @@
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
         outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(13,148,136,.1);
     }
-
     .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
-    .btn-cancel {
-        flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600;
-        background: var(--gray-100); color: var(--gray-700); border: none; cursor: pointer;
-    }
-    .btn-save {
-        flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700;
-        background: var(--teal); color: #fff; border: none; cursor: pointer;
-    }
+    .btn-cancel { flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 600; background: var(--gray-100); color: var(--gray-700); border: none; cursor: pointer; }
+    .btn-save   { flex: 1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700; background: var(--teal); color: #fff; border: none; cursor: pointer; }
     .btn-save:hover { background: var(--teal-dark); }
-
-    .alert-bar {
-        padding: 14px 18px; border-radius: 12px; margin-bottom: 20px;
-        display: none; align-items: center; gap: 10px;
-    }
-    .alert-bar.success { background: #f0fdf4; border: 1px solid #86efac; color: #16a34a; display: flex; }
-    .alert-bar.error   { background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; display: flex; }
 </style>
 @endpush
 
@@ -126,47 +122,42 @@
     </div>
 </div>
 
-<!-- Add/Edit Modal -->
+<!-- Modal Tambah/Edit -->
 <div class="modal-overlay" id="petModal">
     <div class="modal-box">
         <div class="modal-header">
             <h3 id="modalTitle">Tambah Hewan Baru</h3>
-            <button class="modal-close" onclick="closeModal()">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
+            <button class="modal-close" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <form id="petForm">
             <input type="hidden" id="petId">
             <div class="form-group">
-                <label for="petName">Nama Hewan</label>
+                <label>Nama Hewan</label>
                 <input type="text" id="petName" required placeholder="Contoh: Milo">
             </div>
             <div class="form-group">
-                <label for="petSpecies">Jenis Hewan</label>
+                <label>Jenis Hewan</label>
                 <select id="petSpecies" required>
                     <option value="">-- Pilih Jenis --</option>
-                    <option value="Anjing">Anjing</option>
-                    <option value="Kucing">Kucing</option>
-                    <option value="Kelinci">Kelinci</option>
-                    <option value="Hamster">Hamster</option>
-                    <option value="Burung">Burung</option>
-                    <option value="Lainnya">Lainnya</option>
+                    <option>Anjing</option><option>Kucing</option>
+                    <option>Kelinci</option><option>Hamster</option>
+                    <option>Burung</option><option>Lainnya</option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="petBreed">Ras</label>
+                <label>Ras</label>
                 <input type="text" id="petBreed" placeholder="Contoh: Golden Retriever">
             </div>
             <div class="form-group">
-                <label for="petAge">Usia (tahun)</label>
+                <label>Usia (tahun)</label>
                 <input type="number" id="petAge" min="0" step="0.1" placeholder="Contoh: 2.5">
             </div>
             <div class="form-group">
-                <label for="petWeight">Berat (kg)</label>
+                <label>Berat (kg)</label>
                 <input type="number" id="petWeight" min="0" step="0.1" placeholder="Contoh: 15.5">
             </div>
             <div class="form-group">
-                <label for="petNotes">Catatan Kesehatan</label>
+                <label>Catatan Kesehatan</label>
                 <textarea id="petNotes" rows="3" placeholder="Catatan khusus tentang kesehatan hewan..."></textarea>
             </div>
             <div class="modal-actions">
@@ -179,193 +170,193 @@
     </div>
 </div>
 
+@push('scripts')
 <script>
-(function () {
-    const token = localStorage.getItem('vetra_token');
-    const user  = (() => { try { return JSON.parse(localStorage.getItem('vetra_user')); } catch { return null; } })();
-    if (!token || !user) { window.location.href = '/login'; return; }
+// ── Inline apiFetch: JWT auto-refresh ──────────────────────────────────────
+async function apiFetch(url, opts) {
+    opts = opts || {};
+    var token = localStorage.getItem('vetra_token');
+    var headers = Object.assign(
+        { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token },
+        opts.headers || {}
+    );
+    var res = await fetch(url, Object.assign({}, opts, { headers: headers }));
+    if (res.status !== 401) return res;
 
-    let pets      = [];
-    let editingId = null;
-
-    const grid  = document.getElementById('petsGrid');
-    const alert = document.getElementById('alertBar');
-    const alertMsg = document.getElementById('alertMsg');
-
-    function showAlert(msg, type = 'success') {
-        alert.className = 'alert-bar ' + type;
-        alertMsg.textContent = msg;
-        setTimeout(() => { alert.className = 'alert-bar'; }, 5000);
-    }
-
-    function renderState(iconClass, iconColor, message, extra = '') {
-        grid.innerHTML = `
-        <div class="state-box">
-            <i class="${iconClass}" style="color:${iconColor};"></i>
-            <p>${message}</p>
-            ${extra}
-        </div>`;
-    }
-
-    function renderPets() {
-        if (!pets || pets.length === 0) {
-            renderState(
-                'fa-solid fa-paw', 'var(--gray-300)',
-                'Belum ada hewan yang terdaftar.',
-                `<button class="btn-add-pet" onclick="openAddModal()" style="margin:0 auto;">
-                    <i class="fa-solid fa-plus"></i> Tambah Hewan Pertama
-                </button>`
-            );
-            return;
-        }
-
-        grid.innerHTML = pets.map(pet => {
-            const icon = pet.species === 'Anjing' ? 'fa-dog'
-                       : pet.species === 'Kucing'  ? 'fa-cat'
-                       : pet.species === 'Burung'  ? 'fa-dove'
-                       : pet.species === 'Kelinci' ? 'fa-rabbit'
-                       : 'fa-paw';
-
-            const safeName = pet.name.replace(/'/g, "\\'");
-            return `
-            <div class="pet-card">
-                <div class="pet-image">
-                    ${pet.photo ? `<img src="${pet.photo}" alt="${pet.name}">` : `<i class="fa-solid ${icon}"></i>`}
-                </div>
-                <div class="pet-body">
-                    <div class="pet-name">${pet.name}</div>
-                    <div class="pet-info"><i class="fa-solid fa-tag"></i>
-                        <span>${pet.species}${pet.breed ? ' · ' + pet.breed : ''}</span>
-                    </div>
-                    ${pet.age    ? `<div class="pet-info"><i class="fa-solid fa-calendar"></i><span>${pet.age} tahun</span></div>` : ''}
-                    ${pet.weight ? `<div class="pet-info"><i class="fa-solid fa-weight-scale"></i><span>${pet.weight} kg</span></div>` : ''}
-                    ${pet.notes  ? `<div class="pet-info"><i class="fa-solid fa-notes-medical"></i><span>${pet.notes.substring(0,60)}${pet.notes.length > 60 ? '…' : ''}</span></div>` : ''}
-                    <div class="pet-actions">
-                        <button class="btn-edit"   onclick="editPet(${pet.id})"><i class="fa-solid fa-pen"></i> Edit</button>
-                        <button class="btn-delete" onclick="deletePet(${pet.id}, '${safeName}')"><i class="fa-solid fa-trash"></i> Hapus</button>
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-    }
-
-    async function loadPets() {
-        renderState('fa-solid fa-spinner fa-spin', 'var(--teal)', 'Memuat data hewan…');
-        try {
-            const res = await authFetch('/api/user/pets');
-
-            if (res.ok) {
-                const data = await res.json();
-                pets = data.pets || data || [];
-                renderPets();
-            } else {
-                const err = await res.json().catch(() => ({}));
-                renderState(
-                    'fa-solid fa-circle-exclamation', '#dc2626',
-                    'Gagal memuat data hewan: ' + (err.message || 'Terjadi kesalahan.'),
-                    `<button class="btn-add-pet" onclick="loadPets()" style="margin:0 auto;">
-                        <i class="fa-solid fa-rotate-right"></i> Coba Lagi
-                    </button>`
-                );
-            }
-        } catch (e) {
-            console.error('loadPets error:', e);
-            renderState(
-                'fa-solid fa-wifi', '#dc2626',
-                'Tidak dapat terhubung ke server. Periksa koneksi Anda.',
-                `<button class="btn-add-pet" onclick="loadPets()" style="margin:0 auto;">
-                    <i class="fa-solid fa-rotate-right"></i> Coba Lagi
-                </button>`
-            );
-        }
-    }
-
-    // ── Modal ───────────────────────────────────────────────────────────────
-    window.openAddModal = function () {
-        editingId = null;
-        document.getElementById('modalTitle').textContent  = 'Tambah Hewan Baru';
-        document.getElementById('petForm').reset();
-        document.getElementById('petId').value = '';
-        document.getElementById('petModal').classList.add('open');
-    };
-
-    window.editPet = function (id) {
-        const pet = pets.find(p => p.id === id);
-        if (!pet) return;
-        editingId = id;
-        document.getElementById('modalTitle').textContent = 'Edit Data Hewan';
-        document.getElementById('petId').value      = pet.id;
-        document.getElementById('petName').value    = pet.name;
-        document.getElementById('petSpecies').value = pet.species;
-        document.getElementById('petBreed').value   = pet.breed   || '';
-        document.getElementById('petAge').value     = pet.age     || '';
-        document.getElementById('petWeight').value  = pet.weight  || '';
-        document.getElementById('petNotes').value   = pet.notes   || '';
-        document.getElementById('petModal').classList.add('open');
-    };
-
-    window.closeModal = function () {
-        document.getElementById('petModal').classList.remove('open');
-    };
-
-    document.getElementById('petForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('saveBtn');
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan…';
-        btn.disabled  = true;
-
-        const payload = {
-            name:    document.getElementById('petName').value,
-            species: document.getElementById('petSpecies').value,
-            breed:   document.getElementById('petBreed').value   || null,
-            age:     document.getElementById('petAge').value     || null,
-            weight:  document.getElementById('petWeight').value  || null,
-            notes:   document.getElementById('petNotes').value   || null,
-        };
-
-        try {
-            const url    = editingId ? `/api/user/pets/${editingId}` : '/api/user/pets';
-            const method = editingId ? 'PUT' : 'POST';
-
-            const res = await authFetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-
-            if (res.ok) {
-                showAlert(editingId ? 'Data hewan berhasil diperbarui!' : 'Hewan baru berhasil ditambahkan!');
-                window.closeModal();
-                loadPets();
-            } else {
-                const err = await res.json().catch(() => ({}));
-                showAlert('Gagal menyimpan: ' + (err.message || 'Error tidak diketahui'), 'error');
-            }
-        } catch (err) {
-            showAlert('Gagal terhubung ke server.', 'error');
-        } finally {
-            btn.innerHTML = '<i class="fa-solid fa-save"></i> Simpan';
-            btn.disabled  = false;
-        }
+    // 401: try to refresh
+    var rr = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/json' }
     });
-
-    window.deletePet = async function (id, name) {
-        if (!confirm(`Yakin ingin menghapus data "${name}"?`)) return;
-        try {
-            const res = await authFetch(`/api/user/pets/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                showAlert('Data hewan berhasil dihapus');
-                loadPets();
-            } else {
-                showAlert('Gagal menghapus data hewan.', 'error');
-            }
-        } catch {
-            showAlert('Gagal terhubung ke server.', 'error');
+    if (rr.ok) {
+        var d = await rr.json();
+        var newTok = d.access_token || d.token;
+        if (newTok) {
+            localStorage.setItem('vetra_token', newTok);
+            headers['Authorization'] = 'Bearer ' + newTok;
+            return fetch(url, Object.assign({}, opts, { headers: headers }));
         }
+    }
+    // Refresh failed
+    localStorage.removeItem('vetra_token');
+    localStorage.removeItem('vetra_user');
+    window.location.href = '/login';
+    return res;
+}
+// ── End apiFetch ──────────────────────────────────────────────────────────
+
+var petsData   = [];
+var editingId  = null;
+
+var grid     = document.getElementById('petsGrid');
+var alertBar = document.getElementById('alertBar');
+var alertMsg = document.getElementById('alertMsg');
+
+function showAlert(msg, type) {
+    type = type || 'success';
+    alertBar.className = 'alert-bar ' + type;
+    alertMsg.textContent = msg;
+    setTimeout(function() { alertBar.className = 'alert-bar'; }, 5000);
+}
+
+function setGrid(html) { grid.innerHTML = '<div class="state-box">' + html + '</div>'; }
+
+function renderPets() {
+    if (!petsData || petsData.length === 0) {
+        grid.innerHTML = '<div class="state-box"><i class="fa-solid fa-paw" style="color:var(--gray-300);"></i><p>Belum ada hewan yang terdaftar.</p>'
+            + '<button class="retry-btn" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Tambah Hewan Pertama</button></div>';
+        return;
+    }
+    grid.innerHTML = petsData.map(function(pet) {
+        var icon = pet.species === 'Anjing' ? 'fa-dog'
+                 : pet.species === 'Kucing'  ? 'fa-cat'
+                 : pet.species === 'Burung'  ? 'fa-dove'
+                 : pet.species === 'Kelinci' ? 'fa-rabbit'
+                 : 'fa-paw';
+        var safeName = (pet.name || '').replace(/'/g, "\\'");
+        return '<div class="pet-card">'
+            + '<div class="pet-image">'
+            +   (pet.photo ? '<img src="' + pet.photo + '" alt="' + pet.name + '">' : '<i class="fa-solid ' + icon + '"></i>')
+            + '</div>'
+            + '<div class="pet-body">'
+            +   '<div class="pet-name">' + pet.name + '</div>'
+            +   '<div class="pet-info"><i class="fa-solid fa-tag"></i><span>' + pet.species + (pet.breed ? ' · ' + pet.breed : '') + '</span></div>'
+            +   (pet.age    ? '<div class="pet-info"><i class="fa-solid fa-calendar"></i><span>' + pet.age + ' tahun</span></div>' : '')
+            +   (pet.weight ? '<div class="pet-info"><i class="fa-solid fa-weight-scale"></i><span>' + pet.weight + ' kg</span></div>' : '')
+            +   (pet.notes  ? '<div class="pet-info"><i class="fa-solid fa-notes-medical"></i><span>' + pet.notes.substring(0,60) + (pet.notes.length > 60 ? '…' : '') + '</span></div>' : '')
+            +   '<div class="pet-actions">'
+            +     '<button class="btn-edit" onclick="editPet(' + pet.id + ')"><i class="fa-solid fa-pen"></i> Edit</button>'
+            +     '<button class="btn-delete" onclick="deletePet(' + pet.id + ',\'' + safeName + '\')"><i class="fa-solid fa-trash"></i> Hapus</button>'
+            +   '</div>'
+            + '</div></div>';
+    }).join('');
+}
+
+async function loadPets() {
+    setGrid('<i class="fa-solid fa-spinner fa-spin" style="color:var(--teal);"></i><p>Memuat data hewan…</p>');
+    try {
+        var res = await apiFetch('/api/user/pets');
+        if (res.ok) {
+            var data = await res.json();
+            petsData = data.pets || data || [];
+            renderPets();
+        } else {
+            var err = {};
+            try { err = await res.json(); } catch(e) {}
+            setGrid('<i class="fa-solid fa-circle-exclamation" style="color:#dc2626;"></i><p>Gagal memuat: ' + (err.message || 'Error ' + res.status) + '</p>'
+                + '<button class="retry-btn" onclick="loadPets()"><i class="fa-solid fa-rotate-right"></i> Coba Lagi</button>');
+        }
+    } catch(e) {
+        console.error('loadPets error:', e);
+        setGrid('<i class="fa-solid fa-wifi" style="color:#dc2626;"></i><p>Tidak dapat terhubung ke server.</p>'
+            + '<button class="retry-btn" onclick="loadPets()"><i class="fa-solid fa-rotate-right"></i> Coba Lagi</button>');
+    }
+}
+
+function openAddModal() {
+    editingId = null;
+    document.getElementById('modalTitle').textContent = 'Tambah Hewan Baru';
+    document.getElementById('petForm').reset();
+    document.getElementById('petId').value = '';
+    document.getElementById('petModal').classList.add('open');
+}
+
+function editPet(id) {
+    var pet = petsData.find(function(p) { return p.id === id; });
+    if (!pet) return;
+    editingId = id;
+    document.getElementById('modalTitle').textContent  = 'Edit Data Hewan';
+    document.getElementById('petId').value      = pet.id;
+    document.getElementById('petName').value    = pet.name    || '';
+    document.getElementById('petSpecies').value = pet.species || '';
+    document.getElementById('petBreed').value   = pet.breed   || '';
+    document.getElementById('petAge').value     = pet.age     || '';
+    document.getElementById('petWeight').value  = pet.weight  || '';
+    document.getElementById('petNotes').value   = pet.notes   || '';
+    document.getElementById('petModal').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('petModal').classList.remove('open');
+}
+
+document.getElementById('petForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    var btn = document.getElementById('saveBtn');
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan…';
+    btn.disabled  = true;
+
+    var payload = {
+        name:    document.getElementById('petName').value,
+        species: document.getElementById('petSpecies').value,
+        breed:   document.getElementById('petBreed').value   || null,
+        age:     document.getElementById('petAge').value     || null,
+        weight:  document.getElementById('petWeight').value  || null,
+        notes:   document.getElementById('petNotes').value   || null
     };
 
-    // ── Init ─────────────────────────────────────────────────────────────────
+    try {
+        var url    = editingId ? '/api/user/pets/' + editingId : '/api/user/pets';
+        var method = editingId ? 'PUT' : 'POST';
+        var res = await apiFetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+            showAlert(editingId ? 'Data hewan berhasil diperbarui!' : 'Hewan baru berhasil ditambahkan!', 'success');
+            closeModal();
+            loadPets();
+        } else {
+            var err = {};
+            try { err = await res.json(); } catch(x) {}
+            showAlert('Gagal menyimpan: ' + (err.message || 'Error tidak diketahui'), 'error');
+        }
+    } catch(ex) {
+        showAlert('Gagal terhubung ke server.', 'error');
+    } finally {
+        btn.innerHTML = '<i class="fa-solid fa-save"></i> Simpan';
+        btn.disabled  = false;
+    }
+});
+
+async function deletePet(id, name) {
+    if (!confirm('Yakin ingin menghapus data "' + name + '"?')) return;
+    try {
+        var res = await apiFetch('/api/user/pets/' + id, { method: 'DELETE' });
+        if (res.ok) { showAlert('Data hewan berhasil dihapus', 'success'); loadPets(); }
+        else { showAlert('Gagal menghapus data hewan.', 'error'); }
+    } catch(e) { showAlert('Gagal terhubung ke server.', 'error'); }
+}
+
+// Init — cek login lalu muat data
+var _vetraToken = localStorage.getItem('vetra_token');
+var _vetraUser  = localStorage.getItem('vetra_user');
+if (!_vetraToken || !_vetraUser) {
+    window.location.href = '/login';
+} else {
     loadPets();
-})();
+}
 </script>
+@endpush
 @endsection
