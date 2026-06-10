@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <script>
+        (function() {
+            try {
+                const token = localStorage.getItem('vetra_token');
+                const userStr = localStorage.getItem('vetra_user');
+                if (token && userStr) {
+                    const user = JSON.parse(userStr);
+                    if (user && user.role) {
+                        document.documentElement.setAttribute('data-role', user.role);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+            document.documentElement.setAttribute('data-role', 'guest');
+        })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Vetra') — Platform Kesehatan Hewan Peliharaan</title>
@@ -36,9 +54,121 @@
             --shadow:     0 4px 24px rgba(13,148,136,.10);
             --shadow-lg:  0 8px 40px rgba(13,148,136,.15);
             --shadow-xl:  0 20px 60px rgba(13,148,136,.18);
+
+            /* Dynamic Theme Variables */
+            --body-bg:            var(--white);
+            --card-bg:            var(--white);
+            --nav-bg:             rgba(255, 255, 255, 0.96);
+            --border-color:       var(--gray-200);
+            --header-bg:          linear-gradient(135deg, var(--teal-50) 0%, #e0f2fe 60%, var(--gray-50) 100%);
+            --theme-pattern-opacity: 0.04;
+            --footer-bg:          var(--gray-800);
+            --footer-text:        var(--gray-400);
+            --footer-icon-bg:     var(--gray-700);
         }
+
+        html[data-role="user"] {
+            --teal:       #f97316;
+            --teal-light: #fb923c;
+            --teal-dark:  #ea580c;
+            --teal-pale:  #ffedd5;
+            --teal-50:    #fffaf0;
+            --body-bg:    #fffdfa;
+            --card-bg:    #ffffff;
+            --border-color: rgba(249, 115, 22, 0.1);
+            --header-bg:  linear-gradient(135deg, #fffaf0 0%, #ffe4e6 60%, #fffdfa 100%);
+            --theme-pattern-opacity: 0.06;
+            --shadow:     0 4px 24px rgba(249, 115, 22, 0.08);
+            --shadow-lg:  0 8px 40px rgba(249, 115, 22, 0.12);
+            --shadow-xl:  0 20px 60px rgba(249, 115, 22, 0.15);
+        }
+
+        html[data-role="doctor"] {
+            --teal:       #0284c7;
+            --teal-light: #38bdf8;
+            --teal-dark:  #0369a1;
+            --teal-pale:  #e0f2fe;
+            --teal-50:    #f0f9ff;
+            --body-bg:    #f8fafc;
+            --card-bg:    #ffffff;
+            --border-color: rgba(2, 132, 199, 0.1);
+            --header-bg:  linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 60%, #f8fafc 100%);
+            --theme-pattern-opacity: 0.03;
+            --shadow:     0 4px 24px rgba(2, 132, 199, 0.08);
+            --shadow-lg:  0 8px 40px rgba(2, 132, 199, 0.12);
+            --shadow-xl:  0 20px 60px rgba(2, 132, 199, 0.15);
+        }
+
+        html[data-role="clinic"] {
+            --teal:       #4f46e5;
+            --teal-light: #6366f1;
+            --teal-dark:  #3730a3;
+            --teal-pale:  #e0e7ff;
+            --teal-50:    #eef2ff;
+            --body-bg:    #fbfbfe;
+            --card-bg:    #ffffff;
+            --border-color: rgba(79, 70, 229, 0.1);
+            --header-bg:  linear-gradient(135deg, #eef2ff 0%, #faf5ff 60%, #fbfbfe 100%);
+            --theme-pattern-opacity: 0.03;
+            --shadow:     0 4px 24px rgba(79, 70, 229, 0.08);
+            --shadow-lg:  0 8px 40px rgba(79, 70, 229, 0.12);
+            --shadow-xl:  0 20px 60px rgba(79, 70, 229, 0.15);
+        }
+
+        html[data-role="admin"] {
+            --teal:       #06b6d4;
+            --teal-light: #22d3ee;
+            --teal-dark:  #0891b2;
+            --teal-pale:  rgba(6, 182, 212, 0.15);
+            --teal-50:    rgba(6, 182, 212, 0.05);
+            --body-bg:    #0f172a;
+            --card-bg:    #1e293b;
+            --nav-bg:     rgba(15, 23, 42, 0.95);
+            --border-color: rgba(6, 182, 212, 0.2);
+            --header-bg:  linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            --theme-pattern-opacity: 0.08;
+            --footer-bg:  #020617;
+            --footer-text: #94a3b8;
+            --footer-icon-bg: #1e293b;
+            
+            --white:      #1e293b;
+            --gray-50:    #090d16;
+            --gray-100:   #1e293b;
+            --gray-200:   #334155;
+            --gray-300:   #475569;
+            --gray-400:   #64748b;
+            --gray-500:   #94a3b8;
+            --gray-600:   #cbd5e1;
+            --gray-700:   #e2e8f0;
+            --gray-800:   #f1f5f9;
+            --gray-900:   #f8fafc;
+            --shadow:     0 4px 24px rgba(6, 182, 212, 0.15);
+            --shadow-lg:  0 8px 40px rgba(6, 182, 212, 0.22);
+            --shadow-xl:  0 20px 60px rgba(6, 182, 212, 0.25);
+        }
+
         html { scroll-behavior: smooth; }
-        body { font-family:'Plus Jakarta Sans',sans-serif; background:var(--white); color:var(--gray-900); overflow-x:hidden; }
+        body {
+            font-family:'Plus Jakarta Sans',sans-serif;
+            background: var(--body-bg);
+            color: var(--gray-900);
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+            transition: background-color .3s, color .3s;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: url('/images/vet_pets_bg.png');
+            background-size: 700px;
+            background-repeat: repeat;
+            opacity: var(--theme-pattern-opacity, 0.04);
+            pointer-events: none;
+            z-index: -1;
+            transition: opacity .3s;
+        }
         a { text-decoration:none; }
         img { max-width:100%; display:block; }
         ul { list-style:none; }
@@ -46,8 +176,8 @@
         /* ===== NAVBAR ===== */
         .navbar {
             position: fixed; top: 0; left: 0; right: 0; z-index: 999;
-            background: rgba(255,255,255,.96); backdrop-filter: blur(16px);
-            border-bottom: 1px solid var(--gray-200); transition: box-shadow .3s;
+            background: var(--nav-bg); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color); transition: all .3s;
         }
         .navbar.scrolled { box-shadow: 0 4px 20px rgba(0,0,0,.08); }
         .nav-inner {
@@ -88,13 +218,13 @@
         /* Mobile Menu */
         .mobile-menu {
             display: none; position: fixed; top: 68px; left: 0; right: 0; z-index: 998;
-            background: #fff; border-bottom: 1px solid var(--gray-200);
-            padding: 12px 24px 20px; box-shadow: 0 8px 24px rgba(0,0,0,.08);
+            background: var(--card-bg); border-bottom: 1px solid var(--border-color);
+            padding: 12px 24px 20px; box-shadow: var(--shadow); transition: all .3s;
         }
         .mobile-menu.open { display: block; }
         .mobile-menu a {
             display: block; padding: 13px 0; font-size: 15px; font-weight: 500;
-            color: var(--gray-700); border-bottom: 1px solid var(--gray-100);
+            color: var(--gray-700); border-bottom: 1px solid var(--border-color);
         }
         .mobile-menu a.active { color: var(--teal); font-weight: 700; }
         .mobile-menu a:last-of-type { border-bottom: none; }
@@ -111,8 +241,8 @@
 
         /* ===== PAGE HEADER ===== */
         .page-header {
-            background: linear-gradient(135deg, var(--teal-50) 0%, #e0f2fe 60%, var(--gray-50) 100%);
-            padding: 56px 24px 52px; position: relative; overflow: hidden;
+            background: var(--header-bg);
+            padding: 56px 24px 52px; position: relative; overflow: hidden; transition: background .3s;
         }
         .page-header::before {
             content: ''; position: absolute; top: -80px; right: -80px;
@@ -142,7 +272,7 @@
         .section-sub { font-size: 15px; color: var(--gray-500); line-height: 1.7; }
 
         /* ===== FOOTER ===== */
-        footer { background: var(--gray-800); color: var(--gray-400); padding: 56px 24px 32px; }
+        footer { background: var(--footer-bg); color: var(--footer-text); padding: 56px 24px 32px; transition: all .3s; }
         .footer-inner { max-width: 1200px; margin: 0 auto; }
         .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; margin-bottom: 48px; }
         .footer-brand .logo { color: #fff; margin-bottom: 14px; }
@@ -158,9 +288,9 @@
         .footer-bottom p { font-size: 13px; }
         .footer-social { display: flex; gap: 10px; }
         .footer-social a {
-            width: 36px; height: 36px; border-radius: 10px; background: var(--gray-700);
+            width: 36px; height: 36px; border-radius: 10px; background: var(--footer-icon-bg);
             display: flex; align-items: center; justify-content: center;
-            color: var(--gray-400); font-size: 14px; transition: all .2s;
+            color: var(--footer-text); font-size: 14px; transition: all .2s;
         }
         .footer-social a:hover { background: var(--teal); color: #fff; }
 
@@ -172,7 +302,7 @@
         }
         .btn-primary:hover { background: var(--teal-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(13,148,136,.4); }
         .btn-ghost {
-            background: #fff; color: var(--teal); padding: 13px 26px; border-radius: 12px;
+            background: var(--card-bg); color: var(--teal); padding: 13px 26px; border-radius: 12px;
             font-weight: 600; font-size: 15px; border: 2px solid var(--teal); transition: all .25s; display: inline-flex; align-items: center; gap: 8px;
         }
         .btn-ghost:hover { background: var(--teal); color: #fff; transform: translateY(-2px); }
@@ -193,6 +323,107 @@
             .section-title { font-size: 24px; }
             .footer-top { grid-template-columns: 1fr; gap: 28px; }
             .footer-bottom { flex-direction: column; text-align: center; }
+        }
+
+        /* Dynamic Admin Card, Modal, and Table Overrides */
+        html[data-role="admin"] .profile-card,
+        html[data-role="admin"] .booking-card,
+        html[data-role="admin"] .card,
+        html[data-role="admin"] .chat-container,
+        html[data-role="admin"] .chat-sidebar,
+        html[data-role="admin"] .chat-area,
+        html[data-role="admin"] .chat-input,
+        html[data-role="admin"] .message-bubble.incoming,
+        html[data-role="admin"] .modal-content,
+        html[data-role="admin"] .modal-box,
+        html[data-role="admin"] .modal-body,
+        html[data-role="admin"] .table-responsive,
+        html[data-role="admin"] table,
+        html[data-role="admin"] th,
+        html[data-role="admin"] td,
+        html[data-role="admin"] input,
+        html[data-role="admin"] select,
+        html[data-role="admin"] textarea,
+        html[data-role="admin"] .empty-state,
+        html[data-role="admin"] .doctor-item,
+        html[data-role="admin"] .pet-item,
+        html[data-role="admin"] .stat-card,
+        html[data-role="admin"] .filter-bar,
+        html[data-role="admin"] .filter-tab,
+        html[data-role="admin"] .search-box,
+        html[data-role="admin"] .how-tab,
+        html[data-role="admin"] .how-tabs,
+        html[data-role="admin"] .feat-card,
+        html[data-role="admin"] .about-section,
+        html[data-role="admin"] .features-section,
+        html[data-role="admin"] .how-section,
+        html[data-role="admin"] .dashboard-card,
+        html[data-role="admin"] .quick-actions,
+        html[data-role="admin"] .action-btn,
+        html[data-role="admin"] .info-item,
+        html[data-role="admin"] .section-card,
+        html[data-role="admin"] .clinic-card,
+        html[data-role="admin"] .doctor-card,
+        html[data-role="admin"] .doc-card,
+        html[data-role="admin"] .article-card,
+        html[data-role="admin"] .contact-card,
+        html[data-role="admin"] .contact-info,
+        html[data-role="admin"] .form-card,
+        html[data-role="admin"] .pet-card-wrapper,
+        html[data-role="admin"] .booking-item,
+        html[data-role="admin"] .schedule-card,
+        html[data-role="admin"] .panel,
+        html[data-role="admin"] .panel-header,
+        html[data-role="admin"] .panel-body,
+        html[data-role="admin"] .list-group-item,
+        html[data-role="admin"] .dropdown-menu,
+        html[data-role="admin"] .admin-card,
+        html[data-role="admin"] .card-body,
+        html[data-role="admin"] .card-header,
+        html[data-role="admin"] .card-footer {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-color: rgba(6, 182, 212, 0.2) !important;
+        }
+
+        html[data-role="admin"] .search-box input {
+            color: #f8fafc !important;
+        }
+
+        html[data-role="admin"] .section-divider .line {
+            background: rgba(6, 182, 212, 0.2) !important;
+        }
+
+        html[data-role="admin"] .modal-close {
+            background: rgba(30, 41, 59, 0.9) !important;
+            color: #cbd5e1 !important;
+            border-color: rgba(6, 182, 212, 0.2) !important;
+        }
+
+        html[data-role="admin"] .modal-clinic-hero,
+        html[data-role="admin"] .modal-doc-hero {
+            background: linear-gradient(135deg, #0f172a, #1e293b) !important;
+            border-bottom: 1px solid rgba(6, 182, 212, 0.2) !important;
+        }
+
+        html[data-role="admin"] .modal-doc-big-ava {
+            border-color: rgba(6, 182, 212, 0.3) !important;
+        }
+
+        html[data-role="admin"] .modal-doc-item {
+            background: #1e293b !important;
+            border-color: rgba(6, 182, 212, 0.2) !important;
+        }
+
+        html[data-role="admin"] .modal-doc-item:hover {
+            background: rgba(6, 182, 212, 0.1) !important;
+            border-color: #06b6d4 !important;
+        }
+
+        html[data-role="admin"] .modal-cta .cta-secondary {
+            background: #0f172a !important;
+            color: #cbd5e1 !important;
+            border-color: rgba(6, 182, 212, 0.2) !important;
         }
     </style>
     @stack('styles')
