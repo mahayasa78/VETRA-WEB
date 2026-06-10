@@ -41,6 +41,9 @@ Route::get('/articles/{id}', [ArticleController::class, 'show']);
 // Contact messages (public)
 Route::post('/contact', [ContactMessageController::class, 'store']);
 
+// Chatbot (public - accessible to everyone)
+Route::post('/chatbot/ask', [ChatbotController::class, 'ask']);
+
 // ─── AUTHENTICATED ROUTES (JWT) ───────────────────────────────────────────────
 
 Route::middleware('jwt.auth')->group(function () {
@@ -83,9 +86,6 @@ Route::middleware('jwt.auth')->group(function () {
         Route::post('/{chatId}/messages', [ChatController::class, 'sendMessage']);
         Route::patch('/{chatId}/read', [ChatController::class, 'markRead']);
     });
-
-    // Chatbot
-    Route::post('/chatbot/ask', [ChatbotController::class, 'ask']);
 
     // API Keys management
     Route::prefix('keys')->group(function () {

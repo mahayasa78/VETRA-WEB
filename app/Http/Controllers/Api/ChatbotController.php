@@ -69,7 +69,14 @@ class ChatbotController extends Controller
             // Check if Gemini API key is configured
             $apiKey = env('GEMINI_API_KEY');
             
+            \Log::info('Chatbot request received', [
+                'question' => $userQuestion,
+                'api_key_exists' => !empty($apiKey),
+                'api_key_length' => strlen($apiKey ?? '')
+            ]);
+            
             if (!$apiKey) {
+                \Log::warning('Gemini API key not configured');
                 // Fallback response if no API key
                 return response()->json([
                     'answer' => "Terima kasih atas pertanyaan Anda tentang: \"{$userQuestion}\"\n\n" .
@@ -83,11 +90,13 @@ class ChatbotController extends Controller
                 ]);
             }
             
+            $model = env('GEMINI_MODEL', 'gemini-2.5-flash');
+            
             $response = Http::withoutVerifying()->timeout(30)->withHeaders([
                 'Content-Type' => 'application/json',
-            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=" . $apiKey, [
+            ])->post("https://generativelanguage.googleapis.com/v1beta/models/" . $model . ":generateContent?key=" . $apiKey, [
                 'contents' => [
-                    ['role' => 'user', 'parts' => [['text' => $systemPrompt . "\n\nPertanyaan: " . $userQuestion]]]
+                    ['parts' => [['text' => $systemPrompt . "\n\nPertanyaan: " . $userQuestion]]]
                 ],
                 'generationConfig' => [
                     'temperature' => 0.7,
@@ -95,12 +104,49 @@ class ChatbotController extends Controller
                 ]
             ]);
             
+            \Log::info('Gemini API response', [
+                'status' => $response->status(),
+                'successful' => $response->successful(),
+                'body' => substr($response->body(), 0, 500) // First 500 chars
+            ]);
+            
             if ($response->successful()) {
-                $reply = $response->json('candidates.0.content.parts.0.text');
+                $responseData = $response->json();
+                
+                // Check for error in response
+                if (isset($responseData['error'])) {
+                    \Log::error('Gemini API returned error', $responseData['error']);
+                    
+                    // Return error details for debugging
+                    return response()->json([
+                        'answer' => "Error dari Gemini API:\n" .
+                            "Code: " . ($responseData['error']['code'] ?? 'N/A') . "\n" .
+                            "Message: " . ($responseData['error']['message'] ?? 'N/A') . "\n" .
+                            "Status: " . ($responseData['error']['status'] ?? 'N/A')
+                    ]);
+                }
+                
+                $reply = $responseData['candidates'][0]['content']['parts'][0]['text'] ?? null;
                 
                 if ($reply) {
+                    \Log::info('Chatbot response sent successfully');
                     return response()->json(['answer' => $reply]);
+                } else {
+                    \Log::warning('No reply in Gemini response', ['response' => $responseData]);
+                    return response()->json([
+                        'answer' => 'Format respons tidak sesuai. Debug: ' . json_encode($responseData)
+                    ]);
                 }
+            } else {
+                \Log::error('Gemini API request failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                
+                // Return actual error for debugging
+                return response()->json([
+                    'answer' => "Gemini API Error (HTTP " . $response->status() . "):\n" . $response->body()
+                ]);
             }
             
             // Fallback response
@@ -110,7 +156,12 @@ class ChatbotController extends Controller
             ]);
             
         } catch (\Exception $e) {
-            \Log::error('Chatbot error: ' . $e->getMessage());
+            \Log::error('Chatbot error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             
             return response()->json([
                 'answer' => 'Maaf, layanan chatbot sedang tidak tersedia. ' .

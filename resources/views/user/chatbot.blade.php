@@ -378,23 +378,15 @@
     const token = localStorage.getItem('vetra_token');
     const user = JSON.parse(localStorage.getItem('vetra_user') || 'null');
 
-    // Check auth and role
-    if (!token || !user) {
-        window.location.href = '/login';
-    }
-
-    // Check if user role (only user can access chatbot)
-    if (user.role !== 'user') {
-        alert('Halaman ini hanya untuk pengguna biasa');
-        window.location.href = '/';
-    }
+    // Optional: Check if user is logged in (but chatbot works for everyone)
+    // We keep this for potential future features that need user context
 
     const chatMessages = document.getElementById('chatMessages');
     const chatInput = document.getElementById('chatInput');
     const sendButton = document.getElementById('sendButton');
 
     // Load chat history from localStorage
-    const STORAGE_KEY = 'vetra_chatbot_history_' + user.id;
+    const STORAGE_KEY = 'vetra_chatbot_history_' + (user?.id || 'guest');
     let chatHistory = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 
     // Load existing messages
@@ -517,7 +509,6 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + token,
                     'Accept': 'application/json'
                 },
                 body: JSON.stringify({ question: question })
@@ -529,8 +520,12 @@
                 const data = await response.json();
                 addMessage(data.answer || 'Maaf, saya tidak dapat menjawab pertanyaan Anda saat ini.', false);
             } else {
-                const errorData = await response.json();
-                addMessage('Maaf, terjadi kesalahan. Silakan coba lagi nanti.', false);
+                console.error('API Error:', response.status);
+                if (response.status === 500) {
+                    addMessage('Maaf, layanan chatbot sedang tidak tersedia. Silakan coba lagi nanti.', false);
+                } else {
+                    addMessage('Maaf, terjadi kesalahan. Silakan coba lagi nanti.', false);
+                }
             }
         } catch (error) {
             hideTypingIndicator();
